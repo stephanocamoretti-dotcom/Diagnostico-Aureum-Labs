@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de fuga por rotación — Aureum Labs</title>
+    <style>
+        :root {
+            --navy: #0B1220;
+            --navy-deep: #060A12;
+            --wine: #5C1A2B;
+            --wine-bright: #8C2942;
+            --gold: #E8B838;
+            --gold-soft: #F3D584;
+            --paper: #F2EFE9;
+            --ink-dim: #9BA3B4;
+            --line: rgba(242, 239, 233, 0.10);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background:
+                radial-gradient(ellipse 900px 500px at 15% -10%, rgba(140, 41, 66, 0.35), transparent 60%),
+                radial-gradient(ellipse 700px 500px at 100% 110%, rgba(232, 184, 56, 0.10), transparent 55%),
+                var(--navy);
+            color: var(--paper);
+            font-family: 'Georgia', 'Iowan Old Style', serif;
+            min-height: 100vh;
+            padding: 48px 20px 80px;
+        }
+
+        .wrap {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        .eyebrow {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--gold-soft);
+            margin-bottom: 14px;
+            font-weight: 600;
+        }
+
+        h1 {
+            font-size: clamp(28px, 4vw, 42px);
+            line-height: 1.12;
+            margin: 0 0 10px;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+        }
+
+        h1 em {
+            font-style: normal;
+            color: var(--gold);
+        }
+
+        .sub {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            color: var(--ink-dim);
+            font-size: 15px;
+            line-height: 1.6;
+            max-width: 620px;
+            margin-bottom: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 0;
+            border: 1px solid var(--line);
+            border-radius: 2px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.015);
+        }
+
+        @media (max-width:780px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            padding: 36px 34px;
+        }
+
+        .panel-inputs {
+            border-right: 1px solid var(--line);
+        }
+
+        @media (max-width:780px) {
+            .panel-inputs {
+                border-right: none;
+                border-bottom: 1px solid var(--line);
+            }
+        }
+
+        .panel-title {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--ink-dim);
+            margin-bottom: 26px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title::before {
+            content: '';
+            width: 16px;
+            height: 1px;
+            background: var(--wine-bright);
+        }
+
+        .field {
+            margin-bottom: 26px;
+        }
+
+        .field label {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 13px;
+            color: var(--paper);
+            margin-bottom: 10px;
+        }
+
+        .field label .val {
+            font-family: 'Georgia', serif;
+            color: var(--gold);
+            font-size: 16px;
+        }
+
+        .field .hint {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 11.5px;
+            color: var(--ink-dim);
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 2px;
+            background: var(--line);
+            outline: none;
+            margin: 0;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--gold);
+            cursor: pointer;
+            border: 2px solid var(--navy-deep);
+        }
+
+        input[type=range]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--gold);
+            cursor: pointer;
+            border: 2px solid var(--navy-deep);
+        }
+
+        input[type=number] {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--line);
+            color: var(--paper);
+            font-family: 'Georgia', serif;
+            font-size: 16px;
+            padding: 9px 12px;
+            border-radius: 2px;
+        }
+
+        input[type=number]:focus,
+        input[type=range]:focus {
+            outline: 1.5px solid var(--gold);
+            outline-offset: 2px;
+        }
+
+        .panel-output {
+            background: linear-gradient(180deg, rgba(92, 26, 43, 0.28), rgba(11, 18, 32, 0.6));
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .leak-figure {
+            margin-bottom: 8px;
+        }
+
+        .leak-label {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 12px;
+            color: var(--ink-dim);
+            margin-bottom: 8px;
+        }
+
+        .leak-number {
+            font-size: clamp(38px, 5.5vw, 54px);
+            color: var(--gold);
+            line-height: 1;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+        }
+
+        .leak-number .cur {
+            font-size: 0.42em;
+            color: var(--gold-soft);
+            vertical-align: top;
+            margin-right: 4px;
+        }
+
+        .leak-per {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 13px;
+            color: var(--ink-dim);
+            margin-top: 6px;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--line);
+            margin: 28px 0;
+        }
+
+        .compare {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .compare-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--line);
+            font-size: 13.5px;
+        }
+
+        .compare-row:last-child {
+            border-bottom: none;
+        }
+
+        .compare-row .label {
+            color: var(--ink-dim);
+        }
+
+        .compare-row .amount {
+            color: var(--paper);
+            font-family: 'Georgia', serif;
+            font-size: 16px;
+        }
+
+        .compare-row.highlight .amount {
+            color: var(--gold);
+        }
+
+        .payback {
+            margin-top: 22px;
+            padding: 16px 18px;
+            border: 1px solid rgba(232, 184, 56, 0.35);
+            border-radius: 2px;
+            background: rgba(232, 184, 56, 0.06);
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 13.5px;
+            line-height: 1.55;
+            color: var(--paper);
+        }
+
+        .payback b {
+            color: var(--gold);
+        }
+
+        .disclaimer {
+            margin-top: 36px;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 11.5px;
+            line-height: 1.7;
+            color: var(--ink-dim);
+            border-top: 1px solid var(--line);
+            padding-top: 20px;
+        }
+
+        .disclaimer b {
+            color: var(--paper);
+        }
+
+        .footer-tag {
+            margin-top: 26px;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--ink-dim);
+        }
+
+        .footer-tag span {
+            color: var(--gold);
+        }
+
+        /* Estilos del selector de infraestructura y fuga */
+        .toggle-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid var(--line);
+            margin-top: 8px;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--ink-dim);
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-weight: 700;
+            padding: 10px 6px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .toggle-btn.active {
+            background: var(--wine-bright);
+            color: var(--paper);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        .toggle-btn:hover:not(.active) {
+            color: var(--paper);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .infra-details {
+            margin-top: 12px;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px dashed var(--line);
+            border-radius: 2px;
+            padding: 12px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .infra-details.managed {
+            border-color: rgba(232, 184, 56, 0.35);
+        }
+
+        .infra-details.vps {
+            border-color: rgba(140, 41, 66, 0.5);
+            background: rgba(140, 41, 66, 0.02);
+        }
+
+        .infra-title {
+            font-weight: 700;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 11.5px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--gold-soft);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .infra-title.vps-title {
+            color: #ff4a6e;
+        }
+
+        .infra-bullet {
+            margin-bottom: 5px;
+            padding-left: 14px;
+            position: relative;
+            color: var(--ink-dim);
+        }
+
+        .infra-bullet::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        .infra-bullet.vps-bullet::before {
+            content: '⚠️';
+            color: #ff4a6e;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="eyebrow">Aureum Labs · Herramienta de diagnóstico comercial</div>
+        <h1>Cuánto se está <em>fugando</em><br>tu operación por rotación</h1>
+        <div class="sub">Ajusta las cifras con los datos reales de tu operación. Los valores por defecto representan
+            benchmarks típicos de la industria de contact centers para evaluar el impacto financiero de la rotación y la
+            infraestructura.</div>
+
+        <div class="grid">
+            <div class="panel panel-inputs">
+                <div class="panel-title">Datos de la operación</div>
+
+                <div class="field">
+                    <label>Colaboradores activos <span class="val" id="valHeadcount">200</span></label>
+                    <input type="range" id="headcount" min="20" max="1000" step="10" value="200">
+                </div>
+
+                <div class="field">
+                    <label>Rotación anual estimada <span class="val" id="valTurnover">37%</span></label>
+                    <input type="range" id="turnover" min="10" max="70" step="1" value="37">
+                    <div class="hint">Benchmark de industria para contact centers: 30–45% anual.</div>
+                </div>
+
+                <div class="field">
+                    <label>Sueldo base promedio (S/ / mes) <span class="val" id="valSalary">1,100</span></label>
+                    <input type="range" id="salary" min="600" max="3000" step="50" value="1100">
+                </div>
+
+                <div class="field">
+                    <label>Costo estimado por reemplazo (S/)</label>
+                    <input type="number" id="costPerHire" value="800" step="50">
+                    <div class="hint">Capacitación pagada, reclutamiento y curva de aprendizaje.</div>
+                </div>
+
+                <div class="field">
+                    <label>Setup Aureum — pago único (S/)</label>
+                    <input type="number" id="aureumSetup" value="4550" step="50">
+                    <div class="hint">USD 1,350 al tipo de cambio (~S/3.37). Pago único.</div>
+                </div>
+
+                <div class="field">
+                    <label>Fee mensual Aureum (S/ / mes)</label>
+                    <input type="number" id="aureumMonthlyFee" value="1011" step="50">
+                    <div class="hint">USD 300/mes al tipo de cambio (~S/3.37).</div>
+                </div>
+
+                <!-- SELECTOR DE INFRAESTRUCTURA DE INTEGRACIÓN -->
+                <div class="divider" style="margin: 24px 0 16px 0;"></div>
+                <div class="panel-title">Estructura de Integración de Voz</div>
+
+                <div class="field" style="margin-bottom: 0;">
+                    <label>Infraestructura de Conversación</label>
+                    <div class="toggle-group">
+                        <button type="button" id="btnManaged" class="toggle-btn active">Gestionada (Plataforma)</button>
+                        <button type="button" id="btnVps" class="toggle-btn">Autogestionada (Servidor propio)</button>
+                    </div>
+
+                    <!-- Panel informativo dinámico -->
+                    <div id="infraManagedDetails" class="infra-details managed">
+                        <div class="infra-title">✓ Plataforma Gestionada (En la nube)</div>
+                        <div class="infra-bullet"><b>Baja Latencia (&lt;800ms)</b>: Conversación natural e inmediata que
+                            retiene al cliente.</div>
+                        <div class="infra-bullet"><b>Estabilidad en Picos</b>: Gestión elástica del canal telefónico sin
+                            caídas de sesión.</div>
+                        <div class="infra-bullet"><b>Soporte Integrado</b>: Mantenimiento e infraestructura 24/7
+                            incluidos por el proveedor.</div>
+                    </div>
+
+                    <div id="infraVpsDetails" class="infra-details vps" style="display: none;">
+                        <div class="infra-title vps-title">⚠️ Servidor Autogestionado (VPS / APIs)</div>
+                        <div class="infra-bullet vps-bullet"><b>Costo de Consumo Directo</b>: Pago directo a proveedores
+                            de hosting y APIs.</div>
+                        <div class="infra-bullet vps-bullet"><b>Soporte Interno</b>: Tu equipo asume la configuración de
+                            red y control ante caídas.</div>
+                        <div class="infra-bullet vps-bullet"><b>Fricción de Red (1.5s+)</b>: Mayor latencia de respuesta
+                            en la comunicación por voz.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-output">
+                <div>
+                    <div class="leak-figure">
+                        <div class="leak-label">Costo anual estimado de rotación</div>
+                        <div class="leak-number"><span class="cur">S/</span><span id="annualCost">0</span></div>
+                        <div class="leak-per" id="monthlyLine">≈ S/ 0 al mes</div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="compare">
+                        <div class="compare-row">
+                            <div class="label">Reemplazos al año</div>
+                            <div class="amount" id="replacements">0</div>
+                        </div>
+                        <div class="compare-row">
+                            <div class="label">Costo mensual de rotación</div>
+                            <div class="amount" id="monthlyCost">S/ 0</div>
+                        </div>
+                        <div class="compare-row" id="rowVpsFuga"
+                            style="background: rgba(140, 41, 66, 0.08); display: none;">
+                            <div class="label" style="color: var(--gold-soft);">Soporte técnico y fricción estimada
+                            </div>
+                            <div class="amount" id="vpsFugaCost" style="color: var(--gold-soft);">S/ 0</div>
+                        </div>
+                        <div class="compare-row">
+                            <div class="label" id="labelVoiceCost">Suscripción de Voz (Créditos)</div>
+                            <div class="amount" id="voiceCostOut">S/ 0</div>
+                        </div>
+                        <div class="compare-row">
+                            <div class="label">Setup Aureum (pago único)</div>
+                            <div class="amount" id="aureumSetupOut">S/ 0</div>
+                        </div>
+                        <div class="compare-row highlight">
+                            <div class="label">Fee mensual Aureum</div>
+                            <div class="amount" id="aureumMonthlyOut">S/ 0</div>
+                        </div>
+                    </div>
+
+                    <div class="payback" id="paybackBox">
+                        Con solo reducir la rotación temprana en <b>15%</b>, la operación ahorraría más que la tarifa
+                        mensual de Aureum.
+                    </div>
+                    <div class="payback" id="setupPaybackBox" style="margin-top:14px;">
+                        El setup se recupera solo en <b>0 meses</b> de ahorro en rotación.
+                    </div>
+
+                    <div class="payback" id="neuroscienceBox"
+                        style="margin-top:14px; border-color: rgba(232, 184, 56, 0.2); background: rgba(255, 255, 255, 0.02); color: var(--paper); display: none;">
+                        <b>Análisis de Costo Total (TCO):</b> La alternativa de servidor autogestionado reduce el costo
+                        directo de hosting, pero requiere añadir soporte técnico interno para mantenimiento de flujos y
+                        mitigar las ineficiencias de red.
+                    </div>
+                </div>
+
+                <div class="footer-tag">Aureum Funnel Auditor · <span>Diagnóstico de Operación</span></div>
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            <b>Nota sobre las cifras:</b> El rango de rotación, los costos de contratación y los sueldos se basan en
+            benchmarks promedio de la industria de contact centers. Las estimaciones de soporte y latencia representan
+            la fricción operativa promedio en integraciones autogestionadas frente a plataformas profesionales en la
+            nube.
+        </div>
+    </div>
+
+    <script>
+        const headcountEl = document.getElementById('headcount');
+        const turnoverEl = document.getElementById('turnover');
+        const salaryEl = document.getElementById('salary');
+        const costPerHireEl = document.getElementById('costPerHire');
+        const aureumSetupEl = document.getElementById('aureumSetup');
+        const aureumMonthlyFeeEl = document.getElementById('aureumMonthlyFee');
+
+        const valHeadcount = document.getElementById('valHeadcount');
+        const valTurnover = document.getElementById('valTurnover');
+        const valSalary = document.getElementById('valSalary');
+
+        const annualCostEl = document.getElementById('annualCost');
+        const monthlyLineEl = document.getElementById('monthlyLine');
+        const replacementsEl = document.getElementById('replacements');
+        const monthlyCostEl = document.getElementById('monthlyCost');
+        const vpsFugaCostEl = document.getElementById('vpsFugaCost');
+        const rowVpsFuga = document.getElementById('rowVpsFuga');
+        const labelVoiceCost = document.getElementById('labelVoiceCost');
+        const voiceCostOutEl = document.getElementById('voiceCostOut');
+        const aureumSetupOutEl = document.getElementById('aureumSetupOut');
+        const aureumMonthlyOutEl = document.getElementById('aureumMonthlyOut');
+        const paybackBox = document.getElementById('paybackBox');
+        const setupPaybackBox = document.getElementById('setupPaybackBox');
+        const neuroscienceBox = document.getElementById('neuroscienceBox');
+
+        // Buttons and state for Infra
+        const btnManaged = document.getElementById('btnManaged');
+        const btnVps = document.getElementById('btnVps');
+        const infraManagedDetails = document.getElementById('infraManagedDetails');
+        const infraVpsDetails = document.getElementById('infraVpsDetails');
+
+        let selectedInfra = 'managed'; // 'managed' or 'vps'
+
+        btnManaged.addEventListener('click', () => {
+            selectedInfra = 'managed';
+            btnManaged.classList.add('active');
+            btnVps.classList.remove('active');
+            infraManagedDetails.style.display = 'block';
+            infraVpsDetails.style.display = 'none';
+            update();
+        });
+
+        btnVps.addEventListener('click', () => {
+            selectedInfra = 'vps';
+            btnVps.classList.add('active');
+            btnManaged.classList.remove('active');
+            infraVpsDetails.style.display = 'block';
+            infraManagedDetails.style.display = 'none';
+            update();
+        });
+
+        function fmt(n) {
+            return Math.round(n).toLocaleString('es-PE');
+        }
+
+        function update() {
+            const headcount = parseFloat(headcountEl.value);
+            const turnover = parseFloat(turnoverEl.value) / 100;
+            const salary = parseFloat(salaryEl.value);
+            const costPerHire = parseFloat(costPerHireEl.value) || 0;
+            const aureumSetup = parseFloat(aureumSetupEl.value) || 0;
+            const aureumMonthlyFee = parseFloat(aureumMonthlyFeeEl.value) || 0;
+
+            valHeadcount.textContent = fmt(headcount);
+            valTurnover.textContent = Math.round(turnover * 100) + '%';
+            valSalary.textContent = fmt(salary);
+
+            // Turnover calculations
+            const replacements = headcount * turnover;
+            const annualCost = replacements * costPerHire;
+            const monthlyRotationLeak = annualCost / 12;
+
+            // Infrastructure Cost & Fuga calculations
+            let voiceCost = 0;
+            let hiddenVpsLeak = 0;
+
+            if (selectedInfra === 'managed') {
+                // Auto-tier based on headcount (Dapta pricing: $99 / $499 / $1499) at exchange rate S/ 3.37
+                if (headcount <= 50) {
+                    voiceCost = 99 * 3.37; // S/ 333.63
+                } else if (headcount <= 250) {
+                    voiceCost = 499 * 3.37; // S/ 1,681.63
+                } else {
+                    voiceCost = 1499 * 3.37; // S/ 5,051.63
+                }
+                labelVoiceCost.textContent = 'Suscripción de Voz (Dapta)';
+                rowVpsFuga.style.display = 'none';
+                neuroscienceBox.style.display = 'none';
+            } else {
+                // VPS Option
+                voiceCost = 15 * 3.37; // VPS raw cost: S/ 50.55/mo
+
+                // Mantenimiento y soporte de servidor + coste menor de ineficiencia por latencia
+                // S/ 400 por mes (soporte de flujos) + S/ 300 por latencia
+                hiddenVpsLeak = 700;
+
+                labelVoiceCost.textContent = 'Costo Hosting de Servidor';
+                rowVpsFuga.style.display = 'flex';
+                vpsFugaCostEl.textContent = 'S/ ' + fmt(hiddenVpsLeak);
+
+                // Show TCO box
+                neuroscienceBox.style.display = 'block';
+            }
+
+            // Update main UI elements
+            annualCostEl.textContent = fmt(annualCost);
+            monthlyLineEl.textContent = '≈ S/ ' + fmt(monthlyRotationLeak) + ' al mes';
+            replacementsEl.textContent = Math.round(replacements) + ' / año (~' + (replacements / 12).toFixed(1) + '/mes)';
+            monthlyCostEl.textContent = 'S/ ' + fmt(monthlyRotationLeak);
+            voiceCostOutEl.textContent = 'S/ ' + fmt(voiceCost);
+            aureumSetupOutEl.textContent = 'S/ ' + fmt(aureumSetup);
+            aureumMonthlyOutEl.textContent = 'S/ ' + fmt(aureumMonthlyFee);
+
+            if (selectedInfra === 'managed') {
+                const totalCostProposed = aureumMonthlyFee + voiceCost;
+                if (monthlyRotationLeak > 0) {
+                    const neededReduction = Math.min(100, Math.max(1, Math.round((totalCostProposed / monthlyRotationLeak) * 100)));
+                    paybackBox.innerHTML = 'Con solo reducir la rotación temprana en <b>' + neededReduction + '%</b>, la operación paga el fee de Aureum + la suscripción de voz.';
+                } else {
+                    paybackBox.innerHTML = 'Calculando punto de equilibrio...';
+                }
+            } else {
+                if (monthlyRotationLeak > 0) {
+                    const neededReduction = Math.min(100, Math.max(1, Math.round((aureumMonthlyFee + voiceCost) / monthlyRotationLeak * 100)));
+                    paybackBox.innerHTML = 'Con solo reducir la rotación en <b>' + neededReduction + '%</b>, cubres la tarifa básica mensual.';
+                }
+            }
+
+            if (monthlyRotationLeak > 0 && aureumSetup > 0) {
+                const monthsToRecoverSetup = (aureumSetup / monthlyRotationLeak).toFixed(1);
+                setupPaybackBox.innerHTML = 'El setup se recupera en <b>' + monthsToRecoverSetup + ' meses</b> de ahorro en rotación.';
+            } else {
+                setupPaybackBox.innerHTML = 'Ingresa el setup y el costo mensual de rotación.';
+            }
+        }
+
+        [headcountEl, turnoverEl, salaryEl, costPerHireEl, aureumSetupEl, aureumMonthlyFeeEl].forEach(el => {
+            el.addEventListener('input', update);
+        });
+
+        update();
+    </script>
+</body>
+
+</html>
